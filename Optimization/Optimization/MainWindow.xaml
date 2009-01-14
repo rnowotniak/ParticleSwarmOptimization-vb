@@ -24,7 +24,7 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center">
             <Label Content="f(x,y)="/>
             <TextBox Width="300" VerticalAlignment="Center" FontFamily="Verdana" FontStyle="Italic" Text="x * y"/>
-            <ComboBox x:Name="ComboBox1" Width="120" HorizontalAlignment="Stretch" Text="" VerticalAlignment="Center">
+            <ComboBox x:Name="presetsComboBox" Width="120" HorizontalAlignment="Stretch" Text="" VerticalAlignment="Center">
                 <ComboBoxItem Content="Rosenbrock's valley"/>
                 <ComboBoxItem Content="Rastrigin's function"/>
                 <ComboBoxItem Content="Ackley's path"/>

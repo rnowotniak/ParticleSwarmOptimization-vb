@@ -1,4 +1,6 @@
-﻿Public MustInherit Class ExpressionBaseClass
+﻿Imports System.Text.RegularExpressions
+
+Public MustInherit Class ExpressionBaseClass
     Public MustOverride Function eval(ByVal x As Double, ByVal y As Double) As Double
 End Class
 
@@ -6,7 +8,18 @@ Public Class MathExpressionParser
 
     Private expressionObject As ExpressionBaseClass
 
+    Private Function translate(ByVal expr As String) As String
+        expr = expr.ToLower()
+        expr = Regex.Replace(expr, "(^|[^.])(pow|sin|cos)", "$1Math.$2", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "pow", "Pow", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "sin", "Sin", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "cos", "Cos", RegexOptions.IgnoreCase)
+        Return expr
+    End Function
+
     Public Sub init(ByVal expr As String)
+        expr = translate(expr)
+        MsgBox(expr)
         Dim cp As Microsoft.CSharp.CSharpCodeProvider _
             = New Microsoft.CSharp.CSharpCodeProvider()
         Dim ic As System.CodeDom.Compiler.ICodeCompiler = cp.CreateCompiler()
