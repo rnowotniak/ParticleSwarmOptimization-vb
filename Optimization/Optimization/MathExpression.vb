@@ -4,9 +4,16 @@ Public MustInherit Class ExpressionBaseClass
     Public MustOverride Function eval(ByVal x As Double, ByVal y As Double) As Double
 End Class
 
-Public Class MathExpressionParser
+Public Class MathExpression
 
     Private expressionObject As ExpressionBaseClass
+
+    Public Sub New()
+    End Sub
+
+    Public Sub New(ByVal expr As String)
+        init(expr)
+    End Sub
 
     Private Function translate(ByVal expr As String) As String
         expr = expr.ToLower()
@@ -14,12 +21,12 @@ Public Class MathExpressionParser
         expr = Regex.Replace(expr, "pow", "Pow", RegexOptions.IgnoreCase)
         expr = Regex.Replace(expr, "sin", "Sin", RegexOptions.IgnoreCase)
         expr = Regex.Replace(expr, "cos", "Cos", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "rand", "r.NextDouble()", RegexOptions.IgnoreCase)
         Return expr
     End Function
 
     Public Sub init(ByVal expr As String)
         expr = translate(expr)
-        MsgBox(expr)
         Dim cp As Microsoft.CSharp.CSharpCodeProvider _
             = New Microsoft.CSharp.CSharpCodeProvider()
         Dim ic As System.CodeDom.Compiler.ICodeCompiler = cp.CreateCompiler()
@@ -32,6 +39,7 @@ Public Class MathExpressionParser
         Dim src = "using System;" & _
             "class ExpressionClass : Optimization.ExpressionBaseClass {" & _
             "  public override double eval(double x, double y) {" & _
+            "  Random r = new Random();" & _
             "  return " & expr & " ;" & _
             "  }" & _
             "}"

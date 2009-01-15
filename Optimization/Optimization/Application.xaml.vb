@@ -1,21 +1,30 @@
-﻿Class Application
+﻿Imports System.Threading
+Imports System.Globalization
+
+Class Application
 
     ' Application-level events, such as Startup, Exit, and DispatcherUnhandledException
     ' can be handled in this file.
 
     Public Sub New()
-        If True Then
-            Dim mep As MathExpressionParser = New MathExpressionParser()
-            mep.init("1+pow(x,y) / 3")
+
+        Thread.CurrentThread.CurrentCulture = New CultureInfo("en-US", False)
+
+        ' Some tests
+        'Dim o As New Preset("Rosenbrock's valley", "-(100.0 * (y-x*x)*(y-x*x) + (1-x)*(1-x))", _
+        '    -2, 2, -2, 2)
+        If False Then
+            Dim mep As MathExpression = New MathExpression()
+            mep.init("1+rand")
+            'mep.init(o.func)
             Try
-                MsgBox(Str(mep.eval(9, 15)))
+                MsgBox(Str(mep.eval(1, 1)))
             Catch ex As Exception
                 Environment.Exit(0)
             End Try
             Environment.Exit(0)
         End If
-        Dim o As New Preset("Rosenbrock's vallye", "-(100.0 * (y-x*x)*(y-x*x) + (1-x)*(1-x))", _
-            -2, 2, -2, 2)
+
     End Sub
 
 End Class
