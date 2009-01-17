@@ -27,7 +27,7 @@ Partial Public Class MainWindow
         Next
 
         makeAxes()
-        wireframe.Color = Colors.Red
+        wireframe.Color = Colors.Yellow
 
         view3d.Children.Add(axes)
         view3d.Children.Add(wireframe)
@@ -76,16 +76,24 @@ Partial Public Class MainWindow
         mesh.Positions.Add(p0)
         mesh.Positions.Add(p1)
         mesh.Positions.Add(p2)
-        mesh.TriangleIndices.Add(0)
-        mesh.TriangleIndices.Add(1)
-        mesh.TriangleIndices.Add(2)
-        Dim normal As Vector3D = calculateNormal(p0, p1, p2)
-        mesh.Normals.Add(normal)
-        mesh.Normals.Add(normal)
-        mesh.Normals.Add(normal)
+        If meshCheckBox.IsChecked Then
+            mesh.TriangleIndices.Add(0)
+            mesh.TriangleIndices.Add(1)
+            mesh.TriangleIndices.Add(2)
+            Dim normal As Vector3D = calculateNormal(p0, p1, p2)
+            mesh.Normals.Add(normal)
+            mesh.Normals.Add(normal)
+            mesh.Normals.Add(normal)
+        End If
 
         Dim model As GeometryModel3D = New GeometryModel3D( _
-            mesh, plotTexture)
+            mesh, Nothing)
+        If meshCheckBox.IsChecked Then
+            model.Material = plotTexture
+        End If
+        If doubleSideCheckBox.IsChecked Then
+            model.BackMaterial = plotTexture
+        End If
         Dim group As Model3DGroup = New Model3DGroup()
         group.Children.Add(model)
 
@@ -182,14 +190,6 @@ Partial Public Class MainWindow
         mg3d.Children.Add(gm3)
         particlesModel.Content = mg3d
 
-        Dim foo As Integer = 300000
-        While foo >= 0
-            For i As Integer = 0 To pso.particles.Length - 1
-
-
-            Next
-            foo -= 1
-        End While
     End Sub
 
     Private Sub presetsComboBox_SelectionChanged(ByVal sender As System.Object, ByVal e As System.Windows.Controls.SelectionChangedEventArgs) Handles presetsComboBox.SelectionChanged
@@ -312,5 +312,22 @@ Partial Public Class MainWindow
 
     Private Sub OnViewportMouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseButtonEventArgs)
         prevMousePoint = e.GetPosition(view3d)
+    End Sub
+
+    Private Sub stepButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles stepButton.Click
+        Dim pso As PSO = pso.instance
+        Dim positions As Point3DCollection = New Point3DCollection()
+        Dim size As Double = 0.1
+        For i As Integer = 0 To pso.particles.Length - 1
+            pso.particles(i).position += pso.particles(i).velocity
+            positions.Add(New Point3D(pso.particles(i).position.X - Size, pso.particles(i).position.Y - Size, 0))
+            positions.Add(New Point3D(pso.particles(i).position.X + Size, pso.particles(i).position.Y - Size, 0))
+            positions.Add(New Point3D(pso.particles(i).position.X + Size, pso.particles(i).position.Y + Size, 0))
+            positions.Add(New Point3D(pso.particles(i).position.X - Size, pso.particles(i).position.Y + Size, 0))
+        Next
+        Dim mg3d As Model3DGroup = particlesModel.Content
+        Dim gm3 As GeometryModel3D = mg3d.Children(0)
+        Dim g As MeshGeometry3D = gm3.Geometry
+        g.Positions = positions
     End Sub
 End Class

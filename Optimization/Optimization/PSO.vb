@@ -4,19 +4,19 @@ Public Class Particle
     Public position As Point3D
     Public velocity As Vector3D
 
-    Private rand As Random = New Random()
+    Private Shared rand As Random = New Random()
 
     Public Sub New(p As Point3D)
         position = p
 
-        velocity = New Point3D(rand.NextDouble(), rand.NextDouble, rand.NextDouble())
+        velocity = New Point3D(rand.NextDouble() - 0.5, rand.NextDouble() - 0.5, rand.NextDouble() - 0.5)
     End Sub
 
 End Class
 
 Public Class PSO
 
-    Public instance As PSO
+    Public Shared instance As PSO
 
     Public particles() As Particle
 
