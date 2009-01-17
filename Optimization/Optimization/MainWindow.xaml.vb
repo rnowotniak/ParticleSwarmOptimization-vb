@@ -3,13 +3,56 @@
 Partial Public Class MainWindow
 
     Private trackball As _3DTools.Trackball = New _3DTools.Trackball()
+    Private prevMousePoint As Point
+
+    Private wireframe As _3DTools.ScreenSpaceLines3D = New _3DTools.ScreenSpaceLines3D()
+    Private axes As _3DTools.ScreenSpaceLines3D = New _3DTools.ScreenSpaceLines3D()
 
     Public Sub New()
         InitializeComponent()
-        debugTextBox.Text = "Application started" & vbCrLf
-        trackball.EventSource = view3dBorder
-        camera.Transform = trackball.Transform
+        For Each kvp In Application.instance.presets
+            Dim mi As MenuItem = New MenuItem()
+            mi.Header = kvp.Key
+            mi.Command = New RoutedUICommand()
+            mi.Tag = kvp.Value
+            CommandBindings.Add(New CommandBinding(mi.Command, AddressOf presetsMenuItem_Click))
+            presetsMenuItem.Items.Add(mi)
+            presetsComboBox.Items.Add(kvp.Value)
+        Next
 
+        makeAxes()
+        wireframe.Color = Colors.Red
+
+        view3d.Children.Add(axes)
+        view3d.Children.Add(wireframe)
+
+        debugTextBox.Text = "Application started" & vbCrLf
+    End Sub
+
+    Private Sub makeAxes()
+        axes.Points.Add(New Point3D(-5, -5, -5))
+        axes.Points.Add(New Point3D(5, -5, -5))
+        axes.Points.Add(New Point3D(5, -5, -5))
+        axes.Points.Add(New Point3D(4.5, -4.5, -5))
+        axes.Points.Add(New Point3D(5, -5, -5))
+        axes.Points.Add(New Point3D(4.5, -5.5, -5))
+
+        axes.Points.Add(New Point3D(-5, -5, -5))
+        axes.Points.Add(New Point3D(-5, 5, -5))
+        axes.Points.Add(New Point3D(-5, 5, -5))
+        axes.Points.Add(New Point3D(-5.5, 4.5, -5))
+        axes.Points.Add(New Point3D(-5, 5, -5))
+        axes.Points.Add(New Point3D(-4.5, 4.5, -5))
+
+        axes.Points.Add(New Point3D(-5, -5, -5))
+        axes.Points.Add(New Point3D(-5, -5, 5))
+        axes.Points.Add(New Point3D(-5, -5, 5))
+        axes.Points.Add(New Point3D(-5.5, -5, 4.5))
+        axes.Points.Add(New Point3D(-5, -5, 5))
+        axes.Points.Add(New Point3D(-4.5, -5, 4.5))
+
+
+        axes.Thickness = 3
     End Sub
 
     Private Function createTriangle( _
@@ -41,17 +84,6 @@ Partial Public Class MainWindow
         Dim group As Model3DGroup = New Model3DGroup()
         group.Children.Add(model)
 
-        If wireframeCheckBox.IsChecked Then
-            Dim wireframe As _3DTools.ScreenSpaceLines3D = New _3DTools.ScreenSpaceLines3D
-            wireframe.Points.Add(p0)
-            wireframe.Points.Add(p1)
-            wireframe.Points.Add(p2)
-            wireframe.Points.Add(p0)
-            wireframe.Color = Colors.Red
-            wireframe.Thickness = 3
-            view3d.Children.Add(wireframe)
-        End If
-
         Return group
     End Function
 
@@ -61,7 +93,7 @@ Partial Public Class MainWindow
         Return Vector3D.CrossProduct(v0, v1)
     End Function
 
-    Private Function generateTophography(ByVal expr As MathExpression, _
+    Private Function generateTopography(ByVal expr As MathExpression, _
                                          Optional ByVal density As Integer = 10) As Point3D()
         Dim points(density * density - 1) As Point3D
         Dim rand As New Random()
@@ -81,18 +113,22 @@ Partial Public Class MainWindow
 
         Dim maxheight = Integer.MinValue
 
-        For i As Integer = 0 To density - 1
-            y = ymin
-            For j As Integer = 0 To density - 1
-                points(counter) = New Point3D(i * scale - 5, j * scale - 5, expr.eval(x, y))
-                If Math.Abs(points(counter).Z) > maxheight Then
-                    maxheight = Math.Abs(points(counter).Z)
-                End If
-                y = y + (ymax - ymin) / (density - 1)
-                counter = counter + 1
+        Try
+            For i As Integer = 0 To density - 1
+                y = ymin
+                For j As Integer = 0 To density - 1
+                    points(counter) = New Point3D(i * scale - 5, j * scale - 5, expr.eval(x, y))
+                    If Math.Abs(points(counter).Z) > maxheight Then
+                        maxheight = Math.Abs(points(counter).Z)
+                    End If
+                    y = y + (ymax - ymin) / (density - 1)
+                    counter = counter + 1
+                Next
+                x = x + (xmax - xmin) / (density - 1)
             Next
-            x = x + (xmax - xmin) / (density - 1)
-        Next
+        Catch ex As Exception
+            Return Nothing
+        End Try
 
         logLine("Maximum value on the plot: " & Str(maxheight))
 
@@ -120,14 +156,20 @@ Partial Public Class MainWindow
     End Sub
 
     Private Sub presetsComboBox_SelectionChanged(ByVal sender As System.Object, ByVal e As System.Windows.Controls.SelectionChangedEventArgs) Handles presetsComboBox.SelectionChanged
-        Select Case presetsComboBox.SelectedIndex
-            Case 0
-                functionTextBox.Text = " -(100.0*(y-x*x)*(y-x*x) + (1.0-x)*(1.0-x)) "
-                xminTextBox.Text = "-2.5"
-                xmaxTextBox.Text = "-2.5"
-                yminTextBox.Text = "2.5"
-                ymaxTextBox.Text = "2.5"
-        End Select
+        Dim preset As Preset = CType(presetsComboBox.SelectedItem, Preset)
+        If preset Is Nothing Then
+            Return
+        End If
+        setPreset(preset)
+    End Sub
+
+    Private Sub setPreset(ByVal preset As Preset)
+        functionTextBox.Text = preset.func
+        xminTextBox.Text = Str(preset.xmin)
+        xmaxTextBox.Text = Str(preset.xmax)
+        yminTextBox.Text = Str(preset.ymin)
+        ymaxTextBox.Text = Str(preset.ymax)
+        densityTextBox.Text = Str(preset.density)
     End Sub
 
     Private Sub view3d_MouseMove(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseEventArgs)
@@ -139,15 +181,8 @@ Partial Public Class MainWindow
     End Sub
 
     Private Sub clearPlot()
-        logLine("Viewport area has been cleared")
-        Dim i As Integer = view3d.Children.Count - 1
-        While i >= 0
-            Dim m As ModelVisual3D = view3d.Children(i)
-            If Not TypeOf m.Content Is DirectionalLight Then
-                view3d.Children.RemoveAt(i)
-            End If
-            i = i - 1
-        End While
+        plot.Content = Nothing
+        wireframe.Points.Clear()
     End Sub
 
     Private Sub plotButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles plotButton.Click
@@ -156,7 +191,10 @@ Partial Public Class MainWindow
         Dim mesh As Model3DGroup = New Model3DGroup()
 
         Dim expr As MathExpression = New MathExpression(functionTextBox.Text)
-        Dim points() As Point3D = generateTophography(expr, Int(densityTextBox.Text))
+        Dim points() As Point3D = generateTopography(expr, Int(densityTextBox.Text))
+        If points Is Nothing Then
+            Return
+        End If
 
         Dim density = Int(densityTextBox.Text)
 
@@ -173,10 +211,73 @@ Partial Public Class MainWindow
             y = y + density
         End While
 
-        'mesh.Children.Add(createTriangle(0, 0, 0, 1, 1, 0, 0, 1.2, 0))
+        plot.Content = mesh
+        If wireframeCheckBox.IsChecked Then
+            wireframe.MakeWireframe(mesh)
+        End If
+    End Sub
 
-        Dim model As ModelVisual3D = New ModelVisual3D()
-        model.Content = mesh
-        view3d.Children.Add(model)
+    Private Sub hScrollBar_ValueChanged(ByVal sender As System.Object, ByVal e As System.Windows.RoutedPropertyChangedEventArgs(Of System.Double)) Handles hScrollBar.ValueChanged
+        Dim val As Double = hScrollBar.Value
+        xrot.Angle = val
+    End Sub
+
+    Private Sub vScrollBar_ValueChanged(ByVal sender As System.Object, ByVal e As System.Windows.RoutedPropertyChangedEventArgs(Of System.Double)) Handles vScrollBar.ValueChanged
+        Dim val As Double = vScrollBar.Value
+        If yrot Is Nothing Then
+            Return
+        End If
+        yrot.Angle = val
+    End Sub
+
+    Private Sub aboutMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles aboutMenuItem.Click
+        Dim w As Window = New AboutWindow()
+        w.ShowDialog()
+    End Sub
+
+    Private Sub presetsMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles presetsMenuItem.Click
+        Dim mi As MenuItem
+        Try
+            mi = e.Source
+        Catch ex As InvalidCastException
+            Return
+        End Try
+        Dim p As Preset = mi.Tag
+        setPreset(p)
+    End Sub
+
+    Private Sub resetViewButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles resetViewButton.Click
+        vScrollBar.Value = 0
+        hScrollBar.Value = 0
+        distance.ScaleX = 1
+        distance.ScaleY = 1
+        distance.ScaleZ = 1
+    End Sub
+
+
+    Private Sub OnViewportMouseMove(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseEventArgs)
+        If e.MouseDevice.LeftButton = MouseButtonState.Pressed Then
+            Dim vector As Vector = prevMousePoint - e.GetPosition(view3d)
+            xrot.Angle += Math.Sign(vector.X)
+            yrot.Angle += Math.Sign(vector.Y)
+            prevMousePoint = e.GetPosition(view3d)
+        ElseIf e.MouseDevice.RightButton = MouseButtonState.Pressed Then
+            Dim vector As Vector = prevMousePoint - e.GetPosition(view3d)
+            Dim factor As Double = 1.02
+            If Math.Sign(vector.Y) < 0 Then
+                distance.ScaleX *= factor
+                distance.ScaleY *= factor
+                distance.ScaleZ *= factor
+            Else
+                distance.ScaleX /= factor
+                distance.ScaleY /= factor
+                distance.ScaleZ /= factor
+            End If
+            prevMousePoint = e.GetPosition(view3d)
+        End If
+    End Sub
+
+    Private Sub OnViewportMouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseButtonEventArgs)
+        prevMousePoint = e.GetPosition(view3d)
     End Sub
 End Class

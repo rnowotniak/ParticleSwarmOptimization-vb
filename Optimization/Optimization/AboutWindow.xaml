@@ -1,0 +1,12 @@
+﻿<Window x:Class="AboutWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="About" Height="226" Width="372" ResizeMode="NoResize">
+    <Grid>
+        <Button Height="23" HorizontalAlignment="Right" Margin="0,0,6,13" Name="closeButton" VerticalAlignment="Bottom" Width="75">Close</Button>
+        <Label Height="28" Margin="72,9,65,0" Name="Label1" VerticalAlignment="Top">Particle Swarm Optimization</Label>
+        <Label Height="28" Margin="51,36,31,0" Name="Label2" VerticalAlignment="Top">Copyright (C) 2009   Robert Nowotniak</Label>
+        <Label Margin="72,66,54,94" Name="Label3">Computer Engineering Department</Label>
+        <Label Height="28" Margin="72,0,86,57" Name="Label4" VerticalAlignment="Bottom">Technical University of Lodz</Label>
+    </Grid>
+</Window>

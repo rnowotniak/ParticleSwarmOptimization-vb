@@ -20,4 +20,8 @@
         Me.density = density
     End Sub
 
+    Public Overrides Function ToString() As String
+        Return name
+    End Function
+
 End Class

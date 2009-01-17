@@ -17,10 +17,14 @@ Public Class MathExpression
 
     Private Function translate(ByVal expr As String) As String
         expr = expr.ToLower()
-        expr = Regex.Replace(expr, "(^|[^.])(pow|sin|cos)", "$1Math.$2", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "(^|[^.])(pow|sin|cos|sqrt|abs|pi|exp)", "$1Math.$2", RegexOptions.IgnoreCase)
         expr = Regex.Replace(expr, "pow", "Pow", RegexOptions.IgnoreCase)
         expr = Regex.Replace(expr, "sin", "Sin", RegexOptions.IgnoreCase)
         expr = Regex.Replace(expr, "cos", "Cos", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "sqrt", "Sqrt", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "abs", "Abs", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "exp", "Exp", RegexOptions.IgnoreCase)
+        expr = Regex.Replace(expr, "pi", "PI", RegexOptions.IgnoreCase)
         expr = Regex.Replace(expr, "rand", "r.NextDouble()", RegexOptions.IgnoreCase)
         Return expr
     End Function
