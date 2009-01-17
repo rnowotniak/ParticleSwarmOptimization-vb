@@ -8,6 +8,9 @@ Partial Public Class MainWindow
     Private wireframe As _3DTools.ScreenSpaceLines3D = New _3DTools.ScreenSpaceLines3D()
     Private axes As _3DTools.ScreenSpaceLines3D = New _3DTools.ScreenSpaceLines3D()
 
+    Dim plotTexture As Material = New DiffuseMaterial( _
+        New SolidColorBrush(Colors.White))
+
     Public Sub New()
         InitializeComponent()
         For Each kvp In Application.instance.presets
@@ -77,10 +80,9 @@ Partial Public Class MainWindow
         mesh.Normals.Add(normal)
         mesh.Normals.Add(normal)
         mesh.Normals.Add(normal)
-        Dim material As Material = New DiffuseMaterial( _
-            New SolidColorBrush(Colors.Yellow))
+
         Dim model As GeometryModel3D = New GeometryModel3D( _
-            mesh, material)
+            mesh, plotTexture)
         Dim group As Model3DGroup = New Model3DGroup()
         group.Children.Add(model)
 
@@ -197,6 +199,9 @@ Partial Public Class MainWindow
         End If
 
         Dim density = Int(densityTextBox.Text)
+
+        Dim foo As Model3DGroup = New Model3DGroup()
+
 
         Dim y = 0
         While y <= density * (density - 2)
