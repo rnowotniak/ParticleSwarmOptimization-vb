@@ -53,7 +53,7 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <Label Grid.Column="0" Grid.Row="0" HorizontalAlignment="Right" Content="particles:"/>
-                    <TextBox Grid.Column="1" VerticalAlignment="Center" IsEnabled="True" Margin="5,0" Padding="6,1" Text="50"/>
+                    <TextBox Grid.Column="1" VerticalAlignment="Center" IsEnabled="True" Margin="5,0" Padding="6,1" Text="50" Name="particlesTextBox" />
                     <Label Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" Content="generations:"/>
                     <TextBox Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" IsEnabled="True" Padding="6,1" Margin="5,0" Text="300"/>
                     <Label Grid.Column="0" Grid.Row="2" HorizontalAlignment="Right" Content="density:"/>
@@ -136,9 +136,9 @@
                                             </RotateTransform3D>
                                             <ScaleTransform3D ScaleX="1" ScaleY="1" ScaleZ="1" x:Name="distance"></ScaleTransform3D>
                                         </Transform3DGroup>
-                                        
+
                                     </PerspectiveCamera.Transform>
-                                    </PerspectiveCamera>
+                                </PerspectiveCamera>
                             </Viewport3D.Camera>
 
                             <ModelVisual3D>
@@ -148,6 +148,7 @@
                                     <!--<AmbientLight Color="White" />-->
                                 </ModelVisual3D.Content>
                             </ModelVisual3D>
+
                             <!--<ModelVisual3D>
                                 <ModelVisual3D.Content>
                                     <GeometryModel3D>
@@ -177,6 +178,8 @@
                                 </ModelVisual3D.Content>
                             </ModelVisual3D>-->
                             <ModelVisual3D x:Name="plot" />
+                            <ModelVisual3D x:Name="particlesModel">
+                            </ModelVisual3D>
                         </Viewport3D>
                         <Canvas Grid.Row="0" Grid.Column="0"
                             Background="Transparent"

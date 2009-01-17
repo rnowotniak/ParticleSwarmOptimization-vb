@@ -11,6 +11,9 @@ Partial Public Class MainWindow
     Dim plotTexture As Material = New DiffuseMaterial( _
         New SolidColorBrush(Colors.White))
 
+    Dim particlesTexture As Material = New DiffuseMaterial( _
+        New SolidColorBrush(Colors.Red))
+
     Public Sub New()
         InitializeComponent()
         For Each kvp In Application.instance.presets
@@ -154,7 +157,39 @@ Partial Public Class MainWindow
 
     Private Sub startButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles startButton.Click
         logLine("Starting optimization...")
+        Dim pso As PSO = New PSO(Int(particlesTextBox.Text), _
+            Int(xminTextBox.Text), Int(xmaxTextBox.Text), Int(yminTextBox.Text), Int(ymaxTextBox.Text))
+        Dim mg3d As Model3DGroup = New Model3DGroup()
+        Dim mg As MeshGeometry3D = New MeshGeometry3D()
+        Dim size As Double = 0.1
+        For i As Integer = 0 To pso.particles.Length - 1
+            mg.Positions.Add(New Point3D(pso.particles(i).position.X - size, pso.particles(i).position.Y - size, 0))
+            mg.Positions.Add(New Point3D(pso.particles(i).position.X + size, pso.particles(i).position.Y - size, 0))
+            mg.Positions.Add(New Point3D(pso.particles(i).position.X + size, pso.particles(i).position.Y + size, 0))
+            mg.Positions.Add(New Point3D(pso.particles(i).position.X - size, pso.particles(i).position.Y + size, 0))
+            mg.TriangleIndices.Add(4 * i + 0)
+            mg.TriangleIndices.Add(4 * i + 1)
+            mg.TriangleIndices.Add(4 * i + 2)
+            mg.TriangleIndices.Add(4 * i + 0)
+            mg.TriangleIndices.Add(4 * i + 2)
+            mg.TriangleIndices.Add(4 * i + 3)
+            mg.Normals.Add(New Vector3D(0, 0, 1))
+            mg.Normals.Add(New Vector3D(0, 0, 1))
+            mg.Normals.Add(New Vector3D(0, 0, 1))
+        Next
+        Dim gm3 As GeometryModel3D = New GeometryModel3D(mg, particlesTexture)
+        gm3.BackMaterial = particlesTexture
+        mg3d.Children.Add(gm3)
+        particlesModel.Content = mg3d
 
+        Dim foo As Integer = 300000
+        While foo >= 0
+            For i As Integer = 0 To pso.particles.Length - 1
+
+
+            Next
+            foo -= 1
+        End While
     End Sub
 
     Private Sub presetsComboBox_SelectionChanged(ByVal sender As System.Object, ByVal e As System.Windows.Controls.SelectionChangedEventArgs) Handles presetsComboBox.SelectionChanged
@@ -172,10 +207,6 @@ Partial Public Class MainWindow
         yminTextBox.Text = Str(preset.ymin)
         ymaxTextBox.Text = Str(preset.ymax)
         densityTextBox.Text = Str(preset.density)
-    End Sub
-
-    Private Sub view3d_MouseMove(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseEventArgs)
-        'logLine(camera.Transform.ToString())
     End Sub
 
     Private Sub resetButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles resetButton.Click
@@ -199,9 +230,6 @@ Partial Public Class MainWindow
         End If
 
         Dim density = Int(densityTextBox.Text)
-
-        Dim foo As Model3DGroup = New Model3DGroup()
-
 
         Dim y = 0
         While y <= density * (density - 2)
