@@ -77,10 +77,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserControl1.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Compile Include="Application.xaml.vb">
       <DependentUpon>Application.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -131,9 +127,6 @@
     </Compile>
     <Compile Include="Preset.vb" />
     <Compile Include="PSO.vb" />
-    <Compile Include="UserControl1.xaml.vb">
-      <DependentUpon>UserControl1.xaml</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>

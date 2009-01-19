@@ -13,8 +13,6 @@ Partial Public Class MainWindow
     Private expr As MathExpression
     Private zfactor As Double = 1.0
 
-    Public maxVelocity As Double = 0.3
-
     Private autoRotationTimer As DispatcherTimer = New DispatcherTimer()
     Private psoTimer As DispatcherTimer = New DispatcherTimer()
 
@@ -39,7 +37,7 @@ Partial Public Class MainWindow
         Next
 
         makeAxes()
-
+       
         view3d.Children.Add(axes)
         view3d.Children.Add(wireframe)
 
@@ -52,10 +50,10 @@ Partial Public Class MainWindow
         debugTextBox.Text = "Application started" & vbCrLf
     End Sub
 
+    ' Timers events handlers
     Private Sub psoTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
         psoStep()
     End Sub
-
     Private Sub autoRotationTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
         xrot.Angle += 1
     End Sub
@@ -138,7 +136,7 @@ Partial Public Class MainWindow
     End Function
 #End Region
 
-
+    ' Plot mesh generation function
     Private Function generateTopography(ByVal expr As MathExpression, _
                                          Optional ByVal density As Integer = 10) As Point3D()
         Dim points(density * density - 1) As Point3D
@@ -146,10 +144,10 @@ Partial Public Class MainWindow
         Dim x, y As Double
         Dim xmin, ymin, xmax, ymax As Double
 
-        xmin = Int(xminTextBox.Text)
-        ymin = Int(yminTextBox.Text)
-        xmax = Int(xmaxTextBox.Text)
-        ymax = Int(ymaxTextBox.Text)
+        xmin = Double.Parse(xminTextBox.Text)
+        ymin = Double.Parse(yminTextBox.Text)
+        xmax = Double.Parse(xmaxTextBox.Text)
+        ymax = Double.Parse(ymaxTextBox.Text)
 
         Dim counter As Integer = 0
         x = xmin
@@ -180,7 +178,7 @@ Partial Public Class MainWindow
             Return Nothing
         End Try
 
-        logLine("Maximum value on the plot: " & Str(maxheight))
+        logLine("Maximum value on the mesh: " & Str(maxheight))
         zfactor /= 4.0
 
         ' Rescale height
@@ -201,13 +199,14 @@ Partial Public Class MainWindow
         Environment.Exit(0)
     End Sub
 
+    ' Translate point in domain space to screen coordinates
     Private Function screenCoords(ByVal x As Double, ByVal y As Double, ByVal z As Double) As Double()
         Dim result(2) As Double
         Dim xmin, xmax, ymin, ymax As Double
-        xmin = Int(xminTextBox.Text)
-        ymin = Int(yminTextBox.Text)
-        xmax = Int(xmaxTextBox.Text)
-        ymax = Int(ymaxTextBox.Text)
+        xmin = Double.Parse(xminTextBox.Text)
+        ymin = Double.Parse(yminTextBox.Text)
+        xmax = Double.Parse(xmaxTextBox.Text)
+        ymax = Double.Parse(ymaxTextBox.Text)
         result(0) = x * 10.0 / (xmax - xmin) + -5 + -xmin * (10.0 / (xmax - xmin))
         result(1) = y * 10.0 / (ymax - ymin) + -5 + -ymin * (10.0 / (ymax - ymin))
         result(2) = z / zfactor + 0.01
@@ -215,18 +214,13 @@ Partial Public Class MainWindow
     End Function
 
     Private Sub startButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles startButton.Click
-        logLine("Starting optimization...")
+        logLine("Initializing particles...")
         Dim pso As PSO = New PSO(Int(particlesTextBox.Text), expr, _
-            Int(xminTextBox.Text), Int(xmaxTextBox.Text), Int(yminTextBox.Text), Int(ymaxTextBox.Text))
+            Double.Parse(xminTextBox.Text), Double.Parse(xmaxTextBox.Text), Double.Parse(yminTextBox.Text), Double.Parse(ymaxTextBox.Text))
+
         Dim mg3d As Model3DGroup = New Model3DGroup()
         Dim mg As MeshGeometry3D = New MeshGeometry3D()
-        Dim size As Double = 0.1
         For i As Integer = 0 To pso.particles.Length - 1
-            Dim coords() As Double = screenCoords(pso.particles(i).position.X, pso.particles(i).position.Y, pso.particles(i).position.Z)
-            mg.Positions.Add(New Point3D(coords(0) - size, coords(1) - size, coords(2)))
-            mg.Positions.Add(New Point3D(coords(0) + size, coords(1) - size, coords(2)))
-            mg.Positions.Add(New Point3D(coords(0) + size, coords(1) + size, coords(2)))
-            mg.Positions.Add(New Point3D(coords(0) - size, coords(1) + size, coords(2)))
             mg.TriangleIndices.Add(4 * i + 0)
             mg.TriangleIndices.Add(4 * i + 1)
             mg.TriangleIndices.Add(4 * i + 2)
@@ -238,10 +232,11 @@ Partial Public Class MainWindow
             mg.Normals.Add(New Vector3D(0, 0, 1))
         Next
         Dim gm3 As GeometryModel3D = New GeometryModel3D(mg, particlesTexture)
-        gm3.BackMaterial = particlesTexture
+        'gm3.BackMaterial = particlesTexture
         mg3d.Children.Add(gm3)
         particlesModel.Content = mg3d
 
+        updateParticlesGeometry()
     End Sub
 
     Private Sub presetsComboBox_SelectionChanged(ByVal sender As System.Object, ByVal e As System.Windows.Controls.SelectionChangedEventArgs) Handles presetsComboBox.SelectionChanged
@@ -261,10 +256,6 @@ Partial Public Class MainWindow
         densityTextBox.Text = Str(preset.density)
     End Sub
 
-    Private Sub resetButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles resetButton.Click
-        clearPlot()
-    End Sub
-
     Private Sub clearPlot()
         plot.Content = Nothing
         wireframe.Points.Clear()
@@ -276,7 +267,7 @@ Partial Public Class MainWindow
         Dim mesh As Model3DGroup = New Model3DGroup()
 
         Dim expr As MathExpression = New MathExpression(functionTextBox.Text)
-        Dim points() As Point3D = generateTopography(expr, Int(densityTextBox.Text))
+        Dim points() As Point3D = generateTopography(expr, Double.Parse(densityTextBox.Text))
         If points Is Nothing Then
             Return
         End If
@@ -286,7 +277,7 @@ Partial Public Class MainWindow
             PSO.instance.gbest = Double.NegativeInfinity
         End If
 
-        Dim density = Int(densityTextBox.Text)
+        Dim density = Double.Parse(densityTextBox.Text)
 
         Dim y = 0
         While y <= density * (density - 2)
@@ -371,64 +362,16 @@ Partial Public Class MainWindow
         prevMousePoint = e.GetPosition(view3d)
     End Sub
 
-    ' XXX: przeniesc do PSO.vb
-    Private Sub psoStep()
+    Private Sub updateParticlesGeometry()
         Dim pso As PSO = pso.instance
+
+        ' update the points on the view
         Dim positions As Point3DCollection = New Point3DCollection()
-        Dim size As Double = 0.1
-
-        Dim xmin, xmax, ymin, ymax As Double
-        xmin = Int(xminTextBox.Text)
-        ymin = Int(yminTextBox.Text)
-        xmax = Int(xmaxTextBox.Text)
-        ymax = Int(ymaxTextBox.Text)
-
-        ' learning factors
-        Dim c1 As Double = 2
-        Dim c2 As Double = 2
-
-        For i As Integer = 0 To pso.particles.Length - 1
-            ' calculate fitness value of this particle
-            If pso.particles(i).position.X > xmin And pso.particles(i).position.X < xmax And _
-                    pso.particles(i).position.Y > ymin And pso.particles(i).position.Y < ymax Then
-                pso.particles(i).position.Z = expr.eval(pso.particles(i).position.X, pso.particles(i).position.Y)
-            Else
-                ' solution is out of constraints
-                pso.particles(i).position.Z = Double.NegativeInfinity
-            End If
-
-            If pso.particles(i).position.Z > pso.particles(i).pbest Then
-                pso.particles(i).pbestx = pso.particles(i).position
-                pso.particles(i).pbest = pso.particles(i).position.Z
-            End If
-            If pso.particles(i).position.Z > pso.gbest Then
-                pso.gbest = pso.particles(i).position.Z
-                pso.gbestx = pso.particles(i).position
-            End If
-        Next
-
-        For i As Integer = 0 To pso.particles.Length - 1
-            ' update particles velocities and positions
-            pso.particles(i).velocity += c1 * rand.NextDouble() * (pso.particles(i).pbestx - pso.particles(i).position) _
-                + c2 * rand.NextDouble() * (pso.gbestx - pso.particles(i).position)
-            pso.particles(i).velocity.Z = 0
-            If pso.particles(i).velocity.Length > maxVelocity Then
-                pso.particles(i).velocity /= pso.particles(i).velocity.Length
-                pso.particles(i).velocity *= maxVelocity
-            End If
-            pso.particles(i).position += pso.particles(i).velocity
-        Next
-
-        logLine("Global best solution: " & String.Format("({0},{1})  Value: {2}", pso.gbestx.X, pso.gbestx.Y, pso.gbest))
-        optimumXTextBox.Text = Str(pso.gbestx.X)
-        optimumYTextBox.Text = Str(pso.gbestx.Y)
-        optimumValueTextBox.Text = Str(pso.gbest)
-
-        ' update goemetry
-        For i As Integer = 0 To pso.particles.Length - 1
+        Dim size As Double = 0.05
+        For i As Integer = 0 To PSO.particles.Length - 1
             Dim coords() As Double
-            coords = screenCoords(pso.particles(i).position.X, pso.particles(i).position.Y, _
-                                  expr.eval(pso.particles(i).position.X, pso.particles(i).position.Y))
+            coords = screenCoords(PSO.particles(i).position.X, PSO.particles(i).position.Y, _
+                                  expr.eval(PSO.particles(i).position.X, PSO.particles(i).position.Y))
             positions.Add(New Point3D(coords(0) - size, coords(1) - size, coords(2)))
             positions.Add(New Point3D(coords(0) + size, coords(1) - size, coords(2)))
             positions.Add(New Point3D(coords(0) + size, coords(1) + size, coords(2)))
@@ -439,6 +382,21 @@ Partial Public Class MainWindow
         Dim gm3 As GeometryModel3D = mg3d.Children(0)
         Dim g As MeshGeometry3D = gm3.Geometry
         g.Positions = positions
+    End Sub
+
+
+    Private Sub psoStep()
+        Dim pso As PSO = pso.instance
+
+        pso.doStep()
+
+        logLine(String.Format("{0}) best solution: ({1},{2})  Value: {3}", _
+                              pso.iteration, pso.gbestx.X, pso.gbestx.Y, pso.gbest))
+        optimumXTextBox.Text = Str(pso.gbestx.X)
+        optimumYTextBox.Text = Str(pso.gbestx.Y)
+        optimumValueTextBox.Text = Str(pso.gbest)
+
+        updateParticlesGeometry()
     End Sub
 
     Private Sub stepButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles stepButton.Click
@@ -453,4 +411,5 @@ Partial Public Class MainWindow
     Private Sub runToggleButton_Checked(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles runToggleButton.Checked
         psoTimer.IsEnabled = runToggleButton.IsChecked
     End Sub
+
 End Class

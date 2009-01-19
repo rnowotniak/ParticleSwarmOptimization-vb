@@ -17,20 +17,6 @@ Class Application
 
         addPresets()
 
-        ' Some tests
-        'Dim o As New Preset("Rosenbrock's valley", "-(100.0 * (y-x*x)*(y-x*x) + (1-x)*(1-x))", _
-        '    -2, 2, -2, 2)
-        If False Then
-            Dim mep As MathExpression = New MathExpression()
-            mep.init("1+rand")
-            Try
-                MsgBox(Str(mep.eval(1, 1)))
-            Catch ex As Exception
-                Environment.Exit(0)
-            End Try
-            Environment.Exit(0)
-        End If
-
     End Sub
 
     Private Sub addPreset(ByVal name As String, ByVal func As String, _
@@ -48,12 +34,16 @@ Class Application
         addPreset("Rotated hyper-ellipsoid function", "-(x*x+x*x+y*y)")
         addPreset("Moved axis parallel hyper-ellipsoid function", "-(5*x*x + 5*2*y*y)")
         addPreset("Rosenbrock's valley", "-(100*(y-x*x)*(y-x*x)+(1-x)*(1-x))", -2, 2, -2, 2)
-        addPreset("Rastrigin's function", "-(10*2+ (x*x-10*cos(2*pi*x)) + (y*y-10*cos(2*pi*y)))", -1.5, 1.5, -1.5, 1.5, 30)
-        addPreset("Schwefel's function", "-(-x*sin(sqrt(abs(x))) -y*sin(sqrt(abs(y))))", -500, 500, -500, 500)
-        addPreset("Griewangk's function", "-(x*x/4000+y*y/4000 - cos(x)*cos(y/sqrt(2)) +1)")
-        addPreset("Sum of different power function", "-(abs(x)*(x) + abs(y)*abs(y)*abs(y))")
-        addPreset("Ackley's Path function", "-(-20*exp(-0.2*sqrt(1/2*(x*x+y*y)))-exp(1/2*(cos(2*pi*x)+cos(2*pi*y)))+20+exp(1))")
-        addPreset("Michalewicz's function", "-(-(sin(x)*pow(sin(x*x/pi),(2*10)) +sin(y)*(pow(sin(2*y*y/pi),2*10) ))")
+        addPreset("Rastrigin's function", "-(10*2+ (x*x-10*cos(2*pi*x)) + (y*y-10*cos(2*pi*y)))", _
+                  -1, 1, -1, 1, 20)
+        addPreset("Schwefel's function", "-(-x*sin(sqrt(abs(x))) -y*sin(sqrt(abs(y))))", 100, 600, 400, 800, 20)
+        addPreset("Griewangk's function", "-(x*x/4000+y*y/4000 - cos(x)*cos(y/sqrt(2)) +1)", -5, 5, -5, 5, 20)
+        addPreset("Sum of different power function", "-(abs(x)*abs(x) + abs(y)*abs(y)*abs(y))", -1, 1, -1, 1)
+        addPreset("Ackley's Path function", _
+                  "-(-20.0*exp(-0.2*sqrt(1.0/2.0*(x*x+y*y)))-exp(1.0/2.0*(cos(2.0*pi*x)+cos(2.0*pi*y)))+20.0+exp(1))", _
+                  -5, 5, -5, 5, 24)
+        addPreset("Michalewicz's function", "-(-(sin(x)*pow(sin(x*x/pi),(2*10)) +sin(y)*(pow(sin(2.0*y*y/pi),2*10) )))", _
+                  1.5, 2.5, 1, 2, 20)
         addPreset("Branins's rcos function", "-(1*(y-5.1/4/pi*i*x*x +5/pi*x - 6)*(y-5.1/4/pi*i*x*x +5/pi*x - 6) + 10*(1-1/8/pi)*cos(x)+10)")
         addPreset("Easom's function", "-(-cos(x)*cos(y)*exp(-( (x-pi)*(x-pi) + (y-pi)*(y-pi)  )))")
         addPreset("Easom's function 2", "-(-cos(x+5)*cos(y+4)*exp(-( (x+5-pi)*(x+5-pi) + (y+4-pi)*(y+4-pi)  )))")
