@@ -1,7 +1,7 @@
 \documentclass[a4paper,11pt,twocolumn]{article}
 \usepackage[left=1cm,top=1cm,right=1cm,bottom=1.5cm]{geometry}
 
-\usepackage{balance}
+%\usepackage{balance}
 \usepackage{titlesec}
 \usepackage{graphicx}
 \usepackage{amsthm}
@@ -15,9 +15,49 @@
 \titleformat*{\subsection}{\center \bf}
 \def\thesection{\Roman{section}} 
 
+%
+% Introduction
+% 	  Numerical Optimization
+% 	  	  fitness function
+% 	     arguments
+% 	     domain
+% 	     linear boundaries
+% 	     exploration vs exploitation
+%       diversity
+%       convergence
+% 	  Particle Swarm Optimization, beloning to Swarm Intelligence
+%       particles, group of solution, exploring problem space
+% 	  new method, invented in 1995, alternative to genetic algorithms
+% 	  collective behaviour of swarm
+% 	  linear constraints
+% Aims of application
+%    implementation of PSO
+%    experiments with various parameters
+%    were performed
+%    experiments with different multimodal 2-dimensional global optimization well-known test functions
+%    	  rosenbrock valey, ackley's path etc
+% Flow charts of main procedures
+%    (PSO)
+% Debug and handling errors
+% 	  catching exceptions
+% 	  logging and debug window
+% 	  assertions could be added
+% Conclusion
+% 		efficient method for solving optimization problems
+%
+% parameters
+% 	learning factors c1, c2
+% 	maximum speed
+%
+% dynamic of the parciles is expressed as simple ODE's and solved
+% using Euler method numerical procedure
+%
+% Visual Basic .NET, Windows Presentation Foundation
+% and its possibilities for 3d modeling
+%
 
-\title{Comparison of evolutionary computing algorithms for numerical
-optimization using Visual Basic and Windows Presentation Foundation}
+\title{Particle Swarm Optimization with Visual Basic\\ and Windows Presentation
+Foundation}
 \author{Robert Nowotniak\\
 \texttt{rnowotniak@kis.p.lodz.pl}\\
 Computer Engineering Department, Technical University of Lodz\\
@@ -33,15 +73,59 @@ Computer Engineering Department, Technical University of Lodz\\
 \begin{abstract}
 This report presents the results of ,,Visual Basic \& Delphi'' course
 final project.
-My project was related to numerical optimization using various
-methods of evolutionary computing, its visualisation and comparison.
-Five evolutionary methods of different complexity was implemented
-using Visual Basic .NET and their efficiency was compared using
+My project was related to numerical optimization with Particle Swarm
+Optimization algorithm and its visualisation in 3d.
+
 many well-known multi-modal function (Rosenbrock, Rastrigin and Schwefel among
 others).
 \end{abstract}
 
 \section{Introduction}
+
+artificial intelligence
+
+collective behaviour
+
+example of
+collective behaviour of a compound system,
+beyond its components
+
+emergence
+
+compromise between
+exploration exploitation
+
+2d Optimization 
+
+optimum
+
+multimodal
+
+maximum value
+
+fitness function
+
+Particle Swarm Optimization
+
+Swarm Intelligence
+
+Eberhart Kennedy 1995
+flocking
+
+Parameters:
+stop condition,
+domain boundaries,
+fitness function,
+generations,
+number of particles
+
+http://www.swarmintelligence.org/tutorials.php
+
+WPF, evaluate its efficiency for visualization of 3d data
+
+parsing mathematical expressions
+
+sin, cos, pi, exp, sqrt, pow
 
 fasdkafj ksfjjaskf askf jaskfj askf akfjkfakfksfjkxjvkzjxvkj aksfjksjkjff adsfj ks
 fasdkafj ksfjjaskf askf jaskfj askf akfjkfakfksfjkxjvkzjxvkj aksfjksjkjff adsfj ks
@@ -97,23 +181,43 @@ fasdkafj ksfjjaskf askf jaskfj askf akfjkfakfksfjkxjvkzjxvkj aksfjksjkjff adsfj 
 
 \section{Aims of application}
 
+
 \section{Flow chars of main procedures}
-
-\subsection{Simple Genetic Algorithm}
-
-\subsection{Quantum-inspired Genetic Algorithm}
-
-\subsection{Genetic Algorithm with Quantum Probability Representation}
 
 \subsection{Particle Swarm Optimization}
 
-\subsection{Quantum-behaved Particle Swarm Optimization}
+
+particle class
+
+PSO class, maitaining collection of Particle instances
+(for implementation of particle swarms of very large quantities
+flyweight design pattern probably would be a efficient solution)
 
 \section{Debug and handling errors}
 
-\balance
+debug area
+
+logging informations
+
+debugTextBox
+
+%\balance
 
 \section{Conclusion}
+
+
+declarative XAML
+
+Visual Basic for implementing application logic and event handling
+
+opportunity
+
+learn Windows Presentation Foundation
+
+design of user interface was created using
+Expression Blend 2 user interface design
+
+Visual Basic .NET
 
 \section{References}
 
@@ -121,15 +225,45 @@ fasdkafj ksfjjaskf askf jaskfj askf akfjkfakfksfjkxjvkzjxvkj aksfjksjkjff adsfj 
 
 \section{Results}
 
+number of particles
+
+c1, c2 learning factors
+
+maximum velocity
+
+
+% sin(x)*sin(y)+4*exp( -(x-.5)**2 - (y-0.5)**2  )
+
+\subsection{De Jong's function}
+\subsection{Axis parallel hyper-ellipsoid function}
+\subsection{Rotated hyper-ellipsoid function}
+\subsection{Moved axis parallel hyper-ellipsoid function}
 \subsection{Rosenbrock's valley}
-
 \subsection{Rastrigin's function}
-
-\subsection{Ackley's path}
-
-\subsection{Langermann's function}
-
+\subsection{Schwefel's function}
+\subsection{Griewangk's function}
+\subsection{Sum of different power function}
+\subsection{Ackley's Path function}
 \subsection{Michalewicz's function}
+\subsection{Branins's rcos function}
+\subsection{Easom's function}
+\subsection{Easom's function 2}
+\subsection{Six-hump camel back function}
+\subsection{Multi criteria function (Rosenbrock+Michalewicz)}
+\subsection{Multi criteria function2 (Ackley + Michalewicz)}
+
+\subsection{Multi criteria function2 (Ackley + Michalewicz)}
+
+\begin{figure}[h]
+   \centering
+	\includegraphics[width=0.9\textwidth]{pso1.jpg}
+\end{figure}
+
+\begin{figure}[h]
+   \centering
+	\includegraphics[width=0.9\textwidth]{pso2.jpg}
+\end{figure}
+
 
 \end{document}
 
