@@ -3,27 +3,32 @@ Imports System.Windows.Threading
 
 Partial Public Class MainWindow
 
+    ' Random number generator
     Private rand As Random = New Random()
 
     Private prevMousePoint As Point
 
+    ' lines in the 3d view
     Private wireframe As _3DTools.ScreenSpaceLines3D = New _3DTools.ScreenSpaceLines3D()
     Private axes As _3DTools.ScreenSpaceLines3D = New _3DTools.ScreenSpaceLines3D()
 
     Private expr As MathExpression
+
+    ' factor for horizontal scaling for the plot
     Private zfactor As Double = 1.0
 
+    ' timers
     Private autoRotationTimer As DispatcherTimer = New DispatcherTimer()
     Private psoTimer As DispatcherTimer = New DispatcherTimer()
 
-    ' textures
-    Dim plotTexture As Material = New DiffuseMaterial( _
+    ' materials for 3d view
+    Dim plotMaterial As Material = New DiffuseMaterial( _
         New SolidColorBrush(Colors.White))
-    Dim particlesTexture As Material = New DiffuseMaterial( _
+    Dim particlesMaterial As Material = New DiffuseMaterial( _
         New SolidColorBrush(Colors.Red))
 
 
-    ' Constructor
+    ' Main Window Constructor
     Public Sub New()
         InitializeComponent()
         For Each kvp In Application.instance.presets
@@ -37,7 +42,7 @@ Partial Public Class MainWindow
         Next
 
         makeAxes()
-       
+
         view3d.Children.Add(axes)
         view3d.Children.Add(wireframe)
 
@@ -50,15 +55,8 @@ Partial Public Class MainWindow
         debugTextBox.Text = "Application started" & vbCrLf
     End Sub
 
-    ' Timers events handlers
-    Private Sub psoTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
-        psoStep()
-    End Sub
-    Private Sub autoRotationTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
-        xrot.Angle += 1
-    End Sub
 
-#Region "axes"
+#Region "axes creation procedure"
     Private Sub makeAxes()
         axes.Points.Add(New Point3D(-5, -5, -5))
         axes.Points.Add(New Point3D(5, -5, -5))
@@ -86,7 +84,8 @@ Partial Public Class MainWindow
     End Sub
 #End Region
 
-#Region "triangles"
+
+#Region "triangles handling routines"
     Private Function createTriangle( _
         ByVal x0 As Double, ByVal y0 As Double, ByVal z0 As Double, _
         ByVal x1 As Double, ByVal y1 As Double, ByVal z1 As Double, _
@@ -115,13 +114,13 @@ Partial Public Class MainWindow
         Dim model As GeometryModel3D = New GeometryModel3D( _
             mesh, Nothing)
         If meshCheckBox.IsChecked Then
-            model.Material = plotTexture
+            model.Material = plotMaterial
             wireframe.Color = Colors.Blue
         Else
             wireframe.Color = Colors.Red
         End If
         If doubleSideCheckBox.IsChecked Then
-            model.BackMaterial = plotTexture
+            model.BackMaterial = plotMaterial
         End If
         Dim group As Model3DGroup = New Model3DGroup()
         group.Children.Add(model)
@@ -135,6 +134,172 @@ Partial Public Class MainWindow
         Return Vector3D.CrossProduct(v0, v1)
     End Function
 #End Region
+
+
+#Region "events handlers"
+    ' Timers events handlers
+    Private Sub psoTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
+        stepButton_Click(Nothing, Nothing)
+    End Sub
+    Private Sub autoRotationTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
+        xrot.Angle += 1
+    End Sub
+
+    Private Sub quitMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles quitMenuItem.Click
+        Environment.Exit(0)
+    End Sub
+
+    Private Sub initializeButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles initializeButton.Click
+        logLine("Initializing particles...")
+        Dim pso As PSO = New PSO(Int(particlesTextBox.Text), expr, _
+            Double.Parse(xminTextBox.Text), Double.Parse(xmaxTextBox.Text), Double.Parse(yminTextBox.Text), Double.Parse(ymaxTextBox.Text))
+
+        Dim mg3d As Model3DGroup = New Model3DGroup()
+        Dim mg As MeshGeometry3D = New MeshGeometry3D()
+        For i As Integer = 0 To pso.particles.Length - 1
+            mg.TriangleIndices.Add(4 * i + 0)
+            mg.TriangleIndices.Add(4 * i + 1)
+            mg.TriangleIndices.Add(4 * i + 2)
+            mg.TriangleIndices.Add(4 * i + 0)
+            mg.TriangleIndices.Add(4 * i + 2)
+            mg.TriangleIndices.Add(4 * i + 3)
+            mg.Normals.Add(New Vector3D(0, 0, 1))
+            mg.Normals.Add(New Vector3D(0, 0, 1))
+            mg.Normals.Add(New Vector3D(0, 0, 1))
+        Next
+        Dim gm3 As GeometryModel3D = New GeometryModel3D(mg, particlesMaterial)
+        'gm3.BackMaterial = particlesTexture
+        mg3d.Children.Add(gm3)
+        particlesModel.Content = mg3d
+
+        updateParticlesGeometry()
+    End Sub
+
+    Private Sub presetsComboBox_SelectionChanged(ByVal sender As System.Object, ByVal e As System.Windows.Controls.SelectionChangedEventArgs) Handles presetsComboBox.SelectionChanged
+        Dim preset As Preset = CType(presetsComboBox.SelectedItem, Preset)
+        If preset Is Nothing Then
+            Return
+        End If
+        setPreset(preset)
+    End Sub
+
+    Private Sub plotButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles plotButton.Click
+        clearPlot()
+
+        Dim mesh As Model3DGroup = New Model3DGroup()
+
+        Dim expr As MathExpression = New MathExpression(functionTextBox.Text)
+        Dim points() As Point3D = generateTopography(expr, Double.Parse(densityTextBox.Text))
+        If points Is Nothing Then
+            Return
+        End If
+        Me.expr = expr
+
+        If Not PSO.instance Is Nothing Then
+            PSO.instance.gbest = Double.NegativeInfinity
+        End If
+
+        Dim density = Double.Parse(densityTextBox.Text)
+
+        ' create triangles by points coordinates
+        Dim y = 0
+        While y <= density * (density - 2)
+            Dim x = 0
+            While x < density - 1
+                mesh.Children.Add( _
+                    createTriangle(points(x + y), points(x + y + density), points(x + y + 1)))
+                mesh.Children.Add( _
+                    createTriangle(points(x + y + 1), points(x + y + density), points(x + y + density + 1)))
+                x = x + 1
+            End While
+            y = y + density
+        End While
+
+        plot.Content = mesh
+        If wireframeCheckBox.IsChecked Then
+            wireframe.MakeWireframe(mesh)
+        End If
+    End Sub
+
+    Private Sub hScrollBar_ValueChanged(ByVal sender As System.Object, ByVal e As System.Windows.RoutedPropertyChangedEventArgs(Of System.Double)) Handles hScrollBar.ValueChanged
+        Dim val As Double = hScrollBar.Value
+        xrot.Angle = val
+    End Sub
+
+    Private Sub vScrollBar_ValueChanged(ByVal sender As System.Object, ByVal e As System.Windows.RoutedPropertyChangedEventArgs(Of System.Double)) Handles vScrollBar.ValueChanged
+        Dim val As Double = vScrollBar.Value
+        If yrot Is Nothing Then
+            Return
+        End If
+        yrot.Angle = val
+    End Sub
+
+    Private Sub aboutMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles aboutMenuItem.Click
+        Dim w As Window = New AboutWindow()
+        w.ShowDialog()
+    End Sub
+
+    Private Sub presetsMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles presetsMenuItem.Click
+        Dim mi As MenuItem
+        Try
+            mi = e.Source
+        Catch ex As InvalidCastException
+            Return
+        End Try
+        Dim p As Preset = mi.Tag
+        setPreset(p)
+    End Sub
+
+    Private Sub OnViewportMouseMove(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseEventArgs)
+        If e.MouseDevice.LeftButton = MouseButtonState.Pressed Then
+            Dim vector As Vector = prevMousePoint - e.GetPosition(view3d)
+            xrot.Angle += Math.Sign(vector.X)
+            yrot.Angle += Math.Sign(vector.Y)
+            prevMousePoint = e.GetPosition(view3d)
+        ElseIf e.MouseDevice.RightButton = MouseButtonState.Pressed Then
+            Dim vector As Vector = prevMousePoint - e.GetPosition(view3d)
+            Dim factor As Double = 1.02
+            If Math.Sign(vector.Y) < 0 Then
+                distance.ScaleX *= factor
+                distance.ScaleY *= factor
+                distance.ScaleZ *= factor
+            Else
+                distance.ScaleX /= factor
+                distance.ScaleY /= factor
+                distance.ScaleZ /= factor
+            End If
+            prevMousePoint = e.GetPosition(view3d)
+        End If
+    End Sub
+
+    Private Sub OnViewportMouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseButtonEventArgs)
+        prevMousePoint = e.GetPosition(view3d)
+    End Sub
+
+    Private Sub stepButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles stepButton.Click
+        Dim pso As PSO = pso.instance
+
+        pso.doStep()
+
+        logLine(String.Format("{0}) best solution: ({1},{2})  Value: {3}", _
+                              pso.iteration, pso.gbestx.X, pso.gbestx.Y, pso.gbest))
+        optimumXTextBox.Text = Str(pso.gbestx.X)
+        optimumYTextBox.Text = Str(pso.gbestx.Y)
+        optimumValueTextBox.Text = Str(pso.gbest)
+
+        updateParticlesGeometry()
+    End Sub
+
+
+    Private Sub autoRotateToggleButton_Checked(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles autoRotateToggleButton.Checked
+        autoRotationTimer.IsEnabled = autoRotateToggleButton.IsChecked
+    End Sub
+
+    Private Sub runToggleButton_Checked(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles runToggleButton.Checked
+        psoTimer.IsEnabled = runToggleButton.IsChecked
+    End Sub
+#End Region
+
 
     ' Plot mesh generation function
     Private Function generateTopography(ByVal expr As MathExpression, _
@@ -190,14 +355,6 @@ Partial Public Class MainWindow
     End Function
 
 
-    Public Sub logLine(ByVal s As String)
-        debugTextBox.AppendText(s & vbCrLf)
-        debugTextBox.ScrollToEnd()
-    End Sub
-
-    Private Sub quitMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles quitMenuItem.Click
-        Environment.Exit(0)
-    End Sub
 
     ' Translate point in domain space to screen coordinates
     Private Function screenCoords(ByVal x As Double, ByVal y As Double, ByVal z As Double) As Double()
@@ -213,154 +370,14 @@ Partial Public Class MainWindow
         Return result
     End Function
 
-    Private Sub startButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles startButton.Click
-        logLine("Initializing particles...")
-        Dim pso As PSO = New PSO(Int(particlesTextBox.Text), expr, _
-            Double.Parse(xminTextBox.Text), Double.Parse(xmaxTextBox.Text), Double.Parse(yminTextBox.Text), Double.Parse(ymaxTextBox.Text))
 
-        Dim mg3d As Model3DGroup = New Model3DGroup()
-        Dim mg As MeshGeometry3D = New MeshGeometry3D()
-        For i As Integer = 0 To pso.particles.Length - 1
-            mg.TriangleIndices.Add(4 * i + 0)
-            mg.TriangleIndices.Add(4 * i + 1)
-            mg.TriangleIndices.Add(4 * i + 2)
-            mg.TriangleIndices.Add(4 * i + 0)
-            mg.TriangleIndices.Add(4 * i + 2)
-            mg.TriangleIndices.Add(4 * i + 3)
-            mg.Normals.Add(New Vector3D(0, 0, 1))
-            mg.Normals.Add(New Vector3D(0, 0, 1))
-            mg.Normals.Add(New Vector3D(0, 0, 1))
-        Next
-        Dim gm3 As GeometryModel3D = New GeometryModel3D(mg, particlesTexture)
-        'gm3.BackMaterial = particlesTexture
-        mg3d.Children.Add(gm3)
-        particlesModel.Content = mg3d
-
-        updateParticlesGeometry()
-    End Sub
-
-    Private Sub presetsComboBox_SelectionChanged(ByVal sender As System.Object, ByVal e As System.Windows.Controls.SelectionChangedEventArgs) Handles presetsComboBox.SelectionChanged
-        Dim preset As Preset = CType(presetsComboBox.SelectedItem, Preset)
-        If preset Is Nothing Then
-            Return
-        End If
-        setPreset(preset)
-    End Sub
-
-    Private Sub setPreset(ByVal preset As Preset)
-        functionTextBox.Text = preset.func
-        xminTextBox.Text = Str(preset.xmin)
-        xmaxTextBox.Text = Str(preset.xmax)
-        yminTextBox.Text = Str(preset.ymin)
-        ymaxTextBox.Text = Str(preset.ymax)
-        densityTextBox.Text = Str(preset.density)
-    End Sub
 
     Private Sub clearPlot()
         plot.Content = Nothing
         wireframe.Points.Clear()
     End Sub
 
-    Private Sub plotButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles plotButton.Click
-        clearPlot()
 
-        Dim mesh As Model3DGroup = New Model3DGroup()
-
-        Dim expr As MathExpression = New MathExpression(functionTextBox.Text)
-        Dim points() As Point3D = generateTopography(expr, Double.Parse(densityTextBox.Text))
-        If points Is Nothing Then
-            Return
-        End If
-        Me.expr = expr
-
-        If Not PSO.instance Is Nothing Then
-            PSO.instance.gbest = Double.NegativeInfinity
-        End If
-
-        Dim density = Double.Parse(densityTextBox.Text)
-
-        Dim y = 0
-        While y <= density * (density - 2)
-            Dim x = 0
-            While x < density - 1
-                mesh.Children.Add( _
-                    createTriangle(points(x + y), points(x + y + density), points(x + y + 1)))
-                mesh.Children.Add( _
-                    createTriangle(points(x + y + 1), points(x + y + density), points(x + y + density + 1)))
-                x = x + 1
-            End While
-            y = y + density
-        End While
-
-        plot.Content = mesh
-        If wireframeCheckBox.IsChecked Then
-            wireframe.MakeWireframe(mesh)
-        End If
-    End Sub
-
-    Private Sub hScrollBar_ValueChanged(ByVal sender As System.Object, ByVal e As System.Windows.RoutedPropertyChangedEventArgs(Of System.Double)) Handles hScrollBar.ValueChanged
-        Dim val As Double = hScrollBar.Value
-        xrot.Angle = val
-    End Sub
-
-    Private Sub vScrollBar_ValueChanged(ByVal sender As System.Object, ByVal e As System.Windows.RoutedPropertyChangedEventArgs(Of System.Double)) Handles vScrollBar.ValueChanged
-        Dim val As Double = vScrollBar.Value
-        If yrot Is Nothing Then
-            Return
-        End If
-        yrot.Angle = val
-    End Sub
-
-    Private Sub aboutMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles aboutMenuItem.Click
-        Dim w As Window = New AboutWindow()
-        w.ShowDialog()
-    End Sub
-
-    Private Sub presetsMenuItem_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles presetsMenuItem.Click
-        Dim mi As MenuItem
-        Try
-            mi = e.Source
-        Catch ex As InvalidCastException
-            Return
-        End Try
-        Dim p As Preset = mi.Tag
-        setPreset(p)
-    End Sub
-
-    Private Sub resetViewButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles resetViewButton.Click
-        vScrollBar.Value = 0
-        hScrollBar.Value = 0
-        distance.ScaleX = 1
-        distance.ScaleY = 1
-        distance.ScaleZ = 1
-    End Sub
-
-
-    Private Sub OnViewportMouseMove(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseEventArgs)
-        If e.MouseDevice.LeftButton = MouseButtonState.Pressed Then
-            Dim vector As Vector = prevMousePoint - e.GetPosition(view3d)
-            xrot.Angle += Math.Sign(vector.X)
-            yrot.Angle += Math.Sign(vector.Y)
-            prevMousePoint = e.GetPosition(view3d)
-        ElseIf e.MouseDevice.RightButton = MouseButtonState.Pressed Then
-            Dim vector As Vector = prevMousePoint - e.GetPosition(view3d)
-            Dim factor As Double = 1.02
-            If Math.Sign(vector.Y) < 0 Then
-                distance.ScaleX *= factor
-                distance.ScaleY *= factor
-                distance.ScaleZ *= factor
-            Else
-                distance.ScaleX /= factor
-                distance.ScaleY /= factor
-                distance.ScaleZ /= factor
-            End If
-            prevMousePoint = e.GetPosition(view3d)
-        End If
-    End Sub
-
-    Private Sub OnViewportMouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseButtonEventArgs)
-        prevMousePoint = e.GetPosition(view3d)
-    End Sub
 
     Private Sub updateParticlesGeometry()
         Dim pso As PSO = pso.instance
@@ -368,10 +385,10 @@ Partial Public Class MainWindow
         ' update the points on the view
         Dim positions As Point3DCollection = New Point3DCollection()
         Dim size As Double = 0.05
-        For i As Integer = 0 To PSO.particles.Length - 1
+        For i As Integer = 0 To pso.particles.Length - 1
             Dim coords() As Double
-            coords = screenCoords(PSO.particles(i).position.X, PSO.particles(i).position.Y, _
-                                  expr.eval(PSO.particles(i).position.X, PSO.particles(i).position.Y))
+            coords = screenCoords(pso.particles(i).position.X, pso.particles(i).position.Y, _
+                                  expr.eval(pso.particles(i).position.X, pso.particles(i).position.Y))
             positions.Add(New Point3D(coords(0) - size, coords(1) - size, coords(2)))
             positions.Add(New Point3D(coords(0) + size, coords(1) - size, coords(2)))
             positions.Add(New Point3D(coords(0) + size, coords(1) + size, coords(2)))
@@ -385,31 +402,22 @@ Partial Public Class MainWindow
     End Sub
 
 
-    Private Sub psoStep()
-        Dim pso As PSO = pso.instance
 
-        pso.doStep()
-
-        logLine(String.Format("{0}) best solution: ({1},{2})  Value: {3}", _
-                              pso.iteration, pso.gbestx.X, pso.gbestx.Y, pso.gbest))
-        optimumXTextBox.Text = Str(pso.gbestx.X)
-        optimumYTextBox.Text = Str(pso.gbestx.Y)
-        optimumValueTextBox.Text = Str(pso.gbest)
-
-        updateParticlesGeometry()
-    End Sub
-
-    Private Sub stepButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles stepButton.Click
-        psoStep()
+    Public Sub logLine(ByVal s As String)
+        debugTextBox.AppendText(s & vbCrLf)
+        debugTextBox.ScrollToEnd()
     End Sub
 
 
-    Private Sub autoRotateToggleButton_Checked(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles autoRotateToggleButton.Checked
-        autoRotationTimer.IsEnabled = autoRotateToggleButton.IsChecked
-    End Sub
 
-    Private Sub runToggleButton_Checked(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles runToggleButton.Checked
-        psoTimer.IsEnabled = runToggleButton.IsChecked
+    Private Sub setPreset(ByVal preset As Preset)
+        functionTextBox.Text = preset.func
+        xminTextBox.Text = Str(preset.xmin)
+        xmaxTextBox.Text = Str(preset.xmax)
+        yminTextBox.Text = Str(preset.ymin)
+        ymaxTextBox.Text = Str(preset.ymax)
+        densityTextBox.Text = Str(preset.density)
+        plotButton_Click(Nothing, Nothing)
     End Sub
 
 End Class

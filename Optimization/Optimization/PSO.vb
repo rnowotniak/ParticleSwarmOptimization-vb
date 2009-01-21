@@ -56,6 +56,7 @@ Public Class PSO
         Next
     End Sub
 
+    ' PSO algorithm step
     Public Sub doStep()
         iteration += 1
 

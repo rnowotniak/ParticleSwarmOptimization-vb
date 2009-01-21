@@ -60,7 +60,7 @@
                     </Expander>
                 </GroupBox>
                 <GroupBox>
-                    <Expander Header="Optimum solution found" IsExpanded="false">
+                    <Expander Header="Best solution" IsExpanded="false">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition />
@@ -83,27 +83,13 @@
                 <GroupBox>
                     <Expander IsExpanded="true" Header="Algorithm">
                         <StackPanel HorizontalAlignment="Stretch">
-                            <Button  x:Name="startButton"  Content="Initialize" Width="130" />
+                            <Button  x:Name="initializeButton"  Content="Initialize" Width="130" />
                             <Button  x:Name="stepButton" Content="Step" Width="130" />
                             <ToggleButton Width="130" Name="runToggleButton" Unchecked="runToggleButton_Checked">RUN</ToggleButton>
                         </StackPanel>
                     </Expander>
                 </GroupBox>
-                <GroupBox>
-                    <Expander Header="View" IsExpanded="true">
-                        <StackPanel>
-                            <Button x:Name="resetViewButton" Content="Reset View" Width="130" />
-                            <ToggleButton IsThreeState="False" Name="autoRotateToggleButton" Unchecked="autoRotateToggleButton_Checked" Width="130">Auto rotate view</ToggleButton>
-                            <CheckBox Margin="0,10" x:Name="meshCheckBox" Width="90" Content="Plot mesh" IsChecked="True" />
-                            <CheckBox Margin="0,10" x:Name="wireframeCheckBox" Width="90" Content="Wireframe"/>
-                            <CheckBox Margin="0,10" x:Name="doubleSideCheckBox" Width="90" Content="2-side"/>
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <Label HorizontalAlignment="Right" Content="density:"/>
-                                <TextBox VerticalAlignment="Center" IsEnabled="True" Padding="6,1" Margin="5,0" x:Name="densityTextBox" Text="10"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </Expander>
-                </GroupBox>
+                
                 <GroupBox>
                     <Expander Header="PSO parameters" IsExpanded="True" >
                         <Grid>
@@ -125,12 +111,27 @@
                             <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">maximum velocity:</Label>
                             <TextBox Grid.Row="2" Grid.Column="1" Name="maxVelTextBox" VerticalAlignment="Center" Text="2.0"/>
                             <Label Grid.Column="0" Grid.Row="3" HorizontalAlignment="Right" Content="particles:"/>
-                            <TextBox Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" IsEnabled="True" Margin="5,0" Padding="6,1" Text="4" Name="particlesTextBox" />
+                            <TextBox Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" IsEnabled="True" Margin="5,0" Padding="6,1" Text="40" Name="particlesTextBox" />
                             <Label Grid.Column="0" Grid.Row="4" HorizontalAlignment="Right" Content="iterations:"/>
                             <TextBox Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" IsEnabled="True" Padding="6,1" Margin="5,0" Text="300" Name="iterationsTextBox" />
                         </Grid>
                     </Expander>
                 </GroupBox>
+                <GroupBox>
+                    <Expander Header="View" IsExpanded="true">
+                        <StackPanel>
+                            <ToggleButton IsThreeState="False" Name="autoRotateToggleButton" Unchecked="autoRotateToggleButton_Checked" Width="130">Auto rotate view</ToggleButton>
+                            <CheckBox Margin="0,10" x:Name="meshCheckBox" Width="90" Content="Plot mesh" IsChecked="True" />
+                            <CheckBox Margin="0,10" x:Name="wireframeCheckBox" Width="90" Content="Wireframe"/>
+                            <CheckBox Margin="0,10" x:Name="doubleSideCheckBox" Width="90" Content="2-side"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Label HorizontalAlignment="Right" Content="density:"/>
+                                <TextBox VerticalAlignment="Center" IsEnabled="True" Padding="6,1" Margin="5,0" x:Name="densityTextBox" Text="10"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+                </GroupBox>
+                
             </StackPanel>
         </ScrollViewer>
 

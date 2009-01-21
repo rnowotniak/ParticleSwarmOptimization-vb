@@ -22,7 +22,7 @@ Class Application
     Private Sub addPreset(ByVal name As String, ByVal func As String, _
           Optional ByVal xmin As Double = -5, Optional ByVal xmax As Double = 5, _
           Optional ByVal ymin As Double = -5, Optional ByVal ymax As Double = 5, _
-          Optional ByVal density As Integer = 10)
+          Optional ByVal density As Integer = 20)
 
         presets.Add(name, _
             New Preset(name, func, xmin, xmax, ymin, ymax, density))
@@ -44,17 +44,23 @@ Class Application
                   -5, 5, -5, 5, 24)
         addPreset("Michalewicz's function", "-(-(sin(x)*pow(sin(x*x/pi),(2*10)) +sin(y)*(pow(sin(2.0*y*y/pi),2*10) )))", _
                   1.5, 2.5, 1, 2, 20)
-        addPreset("Branins's rcos function", "-(1*(y-5.1/4/pi*i*x*x +5/pi*x - 6)*(y-5.1/4/pi*i*x*x +5/pi*x - 6) + 10*(1-1/8/pi)*cos(x)+10)")
-        addPreset("Easom's function", "-(-cos(x)*cos(y)*exp(-( (x-pi)*(x-pi) + (y-pi)*(y-pi)  )))")
-        addPreset("Easom's function 2", "-(-cos(x+5)*cos(y+4)*exp(-( (x+5-pi)*(x+5-pi) + (y+4-pi)*(y+4-pi)  )))")
-        addPreset("Six-hump camel back function", "-((4-2.1*x*x+pow(x,(4.0/3.0)))*x*x+x*y+(-4+4*y*y)*y*y)")
+        addPreset("Branins's rcos function", _
+                  "-(1*(y-5.1/(4*pi*pi)*x*x +5.0/pi*x - 6)*(y-5.1/(4*pi*pi)*x*x +5.0/pi*x - 6) + 10*(1-1/8/pi)*cos(x)+10)", _
+                  -5, 10, 0, 15, 15)
+        addPreset("Easom's function", "-(-cos(x)*cos(y)*exp(-( (x-pi)*(x-pi) + (y-pi)*(y-pi)  )))", _
+                  1, 5, 1, 5, 20)
+        addPreset("Goldstein-Price's function", _
+                  "-((1+(x+y+1)*(x+y+1)*(19-14*x+3*x*x-14*y+6*x*y+3*y*y))*(30+(2*x-3*y)*(2*x-3*y)*(18-32*x+12*x*x+48*y-36*x*y+27*y*y)) )", _
+                  -2, 2, -2, 2, 20)
+        addPreset("Six-hump camel back function", "-((4-2.1*x*x+pow(x*x*x*x,1.0/3))*x*x+x*y+(-4+4*y*y)*y*y )", _
+                  -2, 2, -2, 2, 20)
         addPreset("Multi criteria function (Rosenbrock+Michalewicz)", " -(100*(y-x*x)*(y-x*x)+(1-x)*(1-x)) + " _
             & " -2000*(-(sin(x/30)*pow(sin((x/30)*(x/30)/pi),(2*10)) +sin(y)*pow(sin(2*(y)*(y)/pi),(2*10)) ))", _
             -2, 2, -2, 2)
-        addPreset("Multi criteria function2 (Ackley + Michalewicz)", _
+        addPreset("Multi criteria function (Ackley+Michalewicz)", _
         "-(-(sin(x)*pow(sin(x*x/pi),(2*10)) +sin(y)*pow(sin(2*y*y/pi),(2*10)) ))" _
             & "+  -(-20*exp(-0.2*sqrt(1/2*(x*x+y*y)))-exp(1/2*(cos(2*pi*x)+cos(2*pi*y)))+20+exp(1))", _
-            -4, 4, -4, 4)
+            -4, 4, -4, 4, 30)
     End Sub
 
 End Class
