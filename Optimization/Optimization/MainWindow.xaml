@@ -2,7 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     x:Class="MainWindow"
-    Title="Particle Swarm Optimization" Height="840.252" Width="1007.445" xmlns:System="clr-namespace:System;assembly=mscorlib" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" WindowState="Maximized">
+    Title="Particle Swarm Optimization" Height="807.385" Width="1006.016" xmlns:System="clr-namespace:System;assembly=mscorlib" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" WindowState="Maximized">
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Presets" Name="presetsMenuItem"/>
@@ -83,13 +83,13 @@
                 <GroupBox>
                     <Expander IsExpanded="true" Header="Algorithm">
                         <StackPanel HorizontalAlignment="Stretch">
-                            <Button  x:Name="initializeButton"  Content="Initialize" Width="130" />
-                            <Button  x:Name="stepButton" Content="Step" Width="130" />
-                            <ToggleButton Width="130" Name="runToggleButton" Unchecked="runToggleButton_Checked">RUN</ToggleButton>
+                            <Button  x:Name="initializeButton"  Content="Initialize" Width="130" IsEnabled="False" />
+                            <Button  x:Name="stepButton" Content="Step" Width="130" IsEnabled="False" />
+                            <ToggleButton Width="130" Name="runToggleButton" Unchecked="runToggleButton_Checked" IsEnabled="False">RUN</ToggleButton>
                         </StackPanel>
                     </Expander>
                 </GroupBox>
-                
+
                 <GroupBox>
                     <Expander Header="PSO parameters" IsExpanded="True" >
                         <Grid>
@@ -105,9 +105,9 @@
                                 <RowDefinition />
                             </Grid.RowDefinitions>
                             <Label Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">learning factor c1:</Label>
-                            <TextBox Grid.Row="0" Grid.Column="1" Name="c1TextBox" VerticalAlignment="Center">0.5</TextBox>
+                            <TextBox Grid.Row="0" Grid.Column="1" Name="c1TextBox" VerticalAlignment="Center">2</TextBox>
                             <Label Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">learning factor c2:</Label>
-                            <TextBox Grid.Row="1" Grid.Column="1" Name="c2TextBox" VerticalAlignment="Center">0.5</TextBox>
+                            <TextBox Grid.Row="1" Grid.Column="1" Name="c2TextBox" VerticalAlignment="Center">2</TextBox>
                             <Label Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">maximum velocity:</Label>
                             <TextBox Grid.Row="2" Grid.Column="1" Name="maxVelTextBox" VerticalAlignment="Center" Text="2.0"/>
                             <Label Grid.Column="0" Grid.Row="3" HorizontalAlignment="Right" Content="particles:"/>
@@ -131,7 +131,7 @@
                         </StackPanel>
                     </Expander>
                 </GroupBox>
-                
+
             </StackPanel>
         </ScrollViewer>
 
@@ -195,7 +195,9 @@
                         <Canvas Grid.Row="0" Grid.Column="0"
                             Background="Transparent"
                             MouseMove="OnViewportMouseMove"
-                                MouseDown="OnViewportMouseDown" />
+                                MouseDown="OnViewportMouseDown" 
+                                MouseWheel="OnViewportMouseWheel"
+                                />
                     </Grid>
                 </DockPanel>
             </Border>

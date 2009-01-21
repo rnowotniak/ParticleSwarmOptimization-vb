@@ -8,7 +8,7 @@ Public Class Particle
 
     Private Shared rand As Random = New Random()
 
-    Public Sub New(p As Point3D)
+    Public Sub New(ByVal p As Point3D)
         position = p
         pbest = p.Z
         pbestx = p
@@ -32,8 +32,11 @@ Public Class PSO
     Public gbest As Double = Double.NegativeInfinity
     Public gbestx As Point3D = New Point3D()
 
-    Private c1 As Double = 2, c2 As Double = 2
-    Private maxVelocity As Double = 1
+    ' learning factors
+    Public c1 As Double = 2
+    Public c2 As Double = 2
+
+    Public maxVelocity As Double = 1
 
     Public iteration As Integer
 
@@ -60,17 +63,14 @@ Public Class PSO
     Public Sub doStep()
         iteration += 1
 
-        ' learning factors
-        Dim c1 As Double = 2
-        Dim c2 As Double = 2
-
+  
         For i As Integer = 0 To particles.Length - 1
             ' calculate fitness value of this particle
             If particles(i).position.X > xmin And particles(i).position.X < xmax And _
                     particles(i).position.Y > ymin And particles(i).position.Y < ymax Then
                 particles(i).position.Z = expr.eval(particles(i).position.X, particles(i).position.Y)
             Else
-                ' solution is out of constraints
+                ' solution is out of constraints (set penalty)
                 particles(i).position.Z = Double.NegativeInfinity
             End If
 

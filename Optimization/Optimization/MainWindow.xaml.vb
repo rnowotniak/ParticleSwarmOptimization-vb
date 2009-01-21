@@ -49,7 +49,7 @@ Partial Public Class MainWindow
         ' set timers
         autoRotationTimer.Interval = New TimeSpan(10000000 / 20)
         AddHandler autoRotationTimer.Tick, AddressOf autoRotationTimer_tick
-        psoTimer.Interval = New TimeSpan(10000000 / 5)
+        psoTimer.Interval = New TimeSpan(10000000 / 15)
         AddHandler psoTimer.Tick, AddressOf psoTimer_tick
 
         debugTextBox.Text = "Application started" & vbCrLf
@@ -139,6 +139,16 @@ Partial Public Class MainWindow
 #Region "events handlers"
     ' Timers events handlers
     Private Sub psoTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
+        Dim pso As PSO = pso.instance
+        If pso Is Nothing Then
+            psoTimer.Stop()
+            Return
+        End If
+        If pso.iteration >= Int(iterationsTextBox.Text) Then
+            psoTimer.Stop()
+            runToggleButton.IsChecked = False
+            Return
+        End If
         stepButton_Click(Nothing, Nothing)
     End Sub
     Private Sub autoRotationTimer_tick(ByVal sender As Object, ByVal e As EventArgs)
@@ -150,6 +160,10 @@ Partial Public Class MainWindow
     End Sub
 
     Private Sub initializeButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles initializeButton.Click
+        If expr Is Nothing Then
+            MsgBox("Create the plot first")
+            Return
+        End If
         logLine("Initializing particles...")
         Dim pso As PSO = New PSO(Int(particlesTextBox.Text), expr, _
             Double.Parse(xminTextBox.Text), Double.Parse(xmaxTextBox.Text), Double.Parse(yminTextBox.Text), Double.Parse(ymaxTextBox.Text))
@@ -194,6 +208,9 @@ Partial Public Class MainWindow
             Return
         End If
         Me.expr = expr
+        initializeButton.IsEnabled = True
+        stepButton.IsEnabled = True
+        runToggleButton.IsEnabled = True
 
         If Not PSO.instance Is Nothing Then
             PSO.instance.gbest = Double.NegativeInfinity
@@ -258,17 +275,25 @@ Partial Public Class MainWindow
             prevMousePoint = e.GetPosition(view3d)
         ElseIf e.MouseDevice.RightButton = MouseButtonState.Pressed Then
             Dim vector As Vector = prevMousePoint - e.GetPosition(view3d)
-            Dim factor As Double = 1.02
-            If Math.Sign(vector.Y) < 0 Then
-                distance.ScaleX *= factor
-                distance.ScaleY *= factor
-                distance.ScaleZ *= factor
-            Else
-                distance.ScaleX /= factor
-                distance.ScaleY /= factor
-                distance.ScaleZ /= factor
-            End If
+            zoom(vector.Y < 0)
             prevMousePoint = e.GetPosition(view3d)
+        End If
+    End Sub
+
+    Private Sub OnViewportMouseWheel(ByVal sender As System.Object, ByVal e As System.Windows.Input.MouseWheelEventArgs)
+        zoom(e.Delta < 0, 1.2)
+    End Sub
+
+    Private Sub zoom(ByVal inOut As Integer, Optional ByVal factor As Double = 1)
+        factor *= 1.02
+        If inOut < 0 Then
+            distance.ScaleX *= factor
+            distance.ScaleY *= factor
+            distance.ScaleZ *= factor
+        Else
+            distance.ScaleX /= factor
+            distance.ScaleY /= factor
+            distance.ScaleZ /= factor
         End If
     End Sub
 
@@ -278,6 +303,15 @@ Partial Public Class MainWindow
 
     Private Sub stepButton_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles stepButton.Click
         Dim pso As PSO = pso.instance
+        If pso Is Nothing Then
+            psoTimer.Stop()
+            MsgBox("Initialize the algorithm first")
+            Return
+        End If
+
+        pso.c1 = Double.Parse(c1TextBox.Text)
+        pso.c2 = Double.Parse(c2TextBox.Text)
+        pso.maxVelocity = Double.Parse(maxVelTextBox.Text)
 
         pso.doStep()
 
@@ -298,6 +332,24 @@ Partial Public Class MainWindow
     Private Sub runToggleButton_Checked(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles runToggleButton.Checked
         psoTimer.IsEnabled = runToggleButton.IsChecked
     End Sub
+
+    Private Sub textBox_LostFocus(ByVal sender As Object, ByVal e As RoutedEventArgs) Handles _
+            xminTextBox.LostFocus, xmaxTextBox.LostFocus, yminTextBox.LostFocus, ymaxTextBox.LostFocus, _
+            c1TextBox.LostFocus, c2TextBox.LostFocus, maxVelTextBox.LostFocus, particlesTextBox.LostFocus, _
+            iterationsTextBox.LostFocus, densityTextBox.LostFocus
+
+        Dim tb As TextBox = sender
+        Try
+            Double.Parse(tb.Text)
+        Catch ex As Exception
+            MsgBox("Wrong format in numerical expression")
+            tb.Text = "0"
+            tb.Focus()
+            tb.SelectAll()
+        End Try
+    End Sub
+
+
 #End Region
 
 
@@ -417,7 +469,11 @@ Partial Public Class MainWindow
         yminTextBox.Text = Str(preset.ymin)
         ymaxTextBox.Text = Str(preset.ymax)
         densityTextBox.Text = Str(preset.density)
+        Const maxVelFactor As Double = 40
+        Dim maxvel As Double = Math.Pow((preset.xmax - preset.xmin) * (preset.ymax - preset.ymin), 0.5) / maxVelFactor
+        maxVelTextBox.Text = String.Format("{0:0.###}", maxvel)
         plotButton_Click(Nothing, Nothing)
     End Sub
 
+ 
 End Class
