@@ -168,6 +168,8 @@ Partial Public Class MainWindow
         Dim pso As PSO = New PSO(Int(particlesTextBox.Text), expr, _
             Double.Parse(xminTextBox.Text), Double.Parse(xmaxTextBox.Text), Double.Parse(yminTextBox.Text), Double.Parse(ymaxTextBox.Text))
 
+        statusTextBlock.Text = "Particles count: " + particlesTextBox.Text
+
         Dim mg3d As Model3DGroup = New Model3DGroup()
         Dim mg As MeshGeometry3D = New MeshGeometry3D()
         For i As Integer = 0 To pso.particles.Length - 1
